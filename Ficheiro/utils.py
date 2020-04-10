@@ -1,14 +1,11 @@
-import config as mscfg
+import config
 import mysql.connector as mysql
 import os.path
 from os import path
 import csv
 import time
 
-tables = {
-    'LOG' : "log",
 
-}
 
 def open_db_connection(Db):
     global cnx #Set Global variable to hold the connection
@@ -16,21 +13,20 @@ def open_db_connection(Db):
     trys = 0
     retry = True
 
-    config = mscfg.main if Db == 'main' else mscfg.log
+    configDB = config.main if Db == 'main' else config.log
 
-    while retry and trys < 3:
+    while retry and trys < config.Number_of_Tries:
         try:
-            cnx = mysql.connect(**config) # Init connetion with Main DB
+            cnx = mysql.connect(**configDB) # Init connetion with Main DB
             retry = False
         except mysql.Error as err:
-            if err.errno == mysql.errorcode.ER_ACCESS_DENIED_ERROR:
-                print("Something is wrong with your user name or password")
-            elif err.errno == mysql.errorcode.ER_BAD_DB_ERROR:
-                print("Database does not exist")
-            else:
-                print("err")
+                print(err)
                 trys += 1
-                time.sleep(5)
+                time.sleep(config.time_to_wait)
+
+    if trys == config.Number_of_Tries:
+        print("migration skiped")
+        exit()
 
 
 def close_db_connection():
